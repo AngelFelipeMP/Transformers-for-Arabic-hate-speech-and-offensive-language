@@ -1,7 +1,6 @@
-
 import torch
 import torch.nn as nn
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel
 
 
 class TransforomerModel(nn.Module):
