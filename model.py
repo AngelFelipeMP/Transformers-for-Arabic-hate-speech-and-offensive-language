@@ -13,17 +13,16 @@ class TransforomerModel(nn.Module):
         
         
     def classifier_(self):
-            return nn.Linear(self.embedding_size * 2, self.number_of_classes)
+        return nn.Linear(self.embedding_size * 2, self.number_of_classes)
         
         
     def forward(self, ids=int(), mask=int(), token_type_ids=int()):
-        if self.transformer_output == 'last_hidden_state':
-            last_hidden_state, _ = self.transformer(ids, attention_mask=mask, token_type_ids=token_type_ids)
-            mean_pool = torch.mean(last_hidden_state, 1)
-            max_pool = torch.max(last_hidden_state, 1)
-            cat = torch.cat((mean_pool,max_pool), 1)
-            drop = self.dropout(cat)
-            
+        last_hidden_state, _ = self.transformer(ids, attention_mask=mask, token_type_ids=token_type_ids)
+        mean_pool = torch.mean(last_hidden_state, 1)
+        max_pool = torch.max(last_hidden_state, 1)
+        cat = torch.cat((mean_pool,max_pool), 1)
+        drop = self.dropout(cat)
+        
         return self.classifier(drop)
 
 
