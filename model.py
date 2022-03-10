@@ -3,11 +3,11 @@ import torch.nn as nn
 from transformers import AutoModel
 
 class TransforomerModel(nn.Module):
-    def __init__(self, pre_trained_model=str(), drop_out=float(), embedding_size=int(), number_of_classes=int()):
+    def __init__(self, transformer, drop_out, embedding_size, number_of_classes):
         super(TransforomerModel, self).__init__()
         self.number_of_classes = number_of_classes
         self.embedding_size = embedding_size
-        self.transformer = AutoModel.from_pretrained(pre_trained_model)
+        self.transformer = AutoModel.from_pretrained(transformer)
         self.dropout = nn.Dropout(drop_out)
         self.classifier = classifier_()
         
@@ -16,7 +16,7 @@ class TransforomerModel(nn.Module):
         return nn.Linear(self.embedding_size * 2, self.number_of_classes)
         
         
-    def forward(self, ids=int(), mask=int(), token_type_ids=int()):
+    def forward(self, ids, mask, token_type_ids):
         last_hidden_state, _ = self.transformer(ids, attention_mask=mask, token_type_ids=token_type_ids)
         mean_pool = torch.mean(last_hidden_state, 1)
         max_pool = torch.max(last_hidden_state, 1)
@@ -24,6 +24,13 @@ class TransforomerModel(nn.Module):
         drop = self.dropout(cat)
         
         return self.classifier(drop)
+
+#COMMENT 'embedding_size' may change for each model
+
+
+
+
+
 
 
 # class TransforomerModel(nn.Module):

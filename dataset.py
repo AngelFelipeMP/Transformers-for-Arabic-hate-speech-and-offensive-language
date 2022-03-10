@@ -3,10 +3,10 @@ import torch.nn as nn
 from transformers import AutoTokenizer
 
 class TransformerDataset:
-    def __init__(self, text, target, max_len):
+    def __init__(self, text, target, max_len, transformer):
         self.text = text
         self.target = target
-        self.tokenizer = AutoTokenizer.from_pretrained(pre_trained_model)
+        self.tokenizer = AutoTokenizer.from_pretrained(transformer)
         self.max_len = max_len
 
     def __len__(self):
