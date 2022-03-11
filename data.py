@@ -13,3 +13,6 @@ if __name__ == "__main__":
                     config.DATASET_INDEX, 
                     DATASET_TEXT_PROCESSED
                     )
+
+#TODO testar data.py
+#TODO testar utils.py
