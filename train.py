@@ -34,7 +34,7 @@ for train_index, val_index in skf.split(dfx[config.DATASET_TEXT_PROCESSED], dfx[
     df_val = dfx.loc[val_index]
     
 
-def run(df_train, df_val, max_len, transformer, batch_size, drop_out, embedding_size, number_of_classes):
+def run(df_train, df_val, max_len, transformer, batch_size, drop_out, embedding_size, number_of_classes, lr):
     
     train_dataset = dataset.TransformerDataset(
         review=df_train[config.DATASET_TEXT_PROCESSED].values,
@@ -65,8 +65,6 @@ def run(df_train, df_val, max_len, transformer, batch_size, drop_out, embedding_
     model = TransforomerModel(transformer, drop_out, embedding_size, number_of_classes)
     model.to(device)
     
-    #TODO check if keeo or remove the part below from run()
-
     param_optimizer = list(model.named_parameters())
     no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
     optimizer_parameters = [
@@ -84,27 +82,35 @@ def run(df_train, df_val, max_len, transformer, batch_size, drop_out, embedding_
         },
     ]
 
-    num_train_steps = int(len(df_train) / config.TRAIN_BATCH_SIZE * config.EPOCHS)
-    optimizer = AdamW(optimizer_parameters, lr=3e-5)
+    num_train_steps = int(len(df_train) / batch_size * config.EPOCHS)
+    optimizer = AdamW(optimizer_parameters, lr=lr)
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=0, num_training_steps=num_train_steps
     )
 
-    best_accuracy = 0
-    for epoch in range(config.EPOCHS):
-        engine.train_fn(train_data_loader, model, optimizer, device, scheduler)
-        outputs, targets = engine.eval_fn(valid_data_loader, model, device)
-        outputs = np.array(outputs) >= 0.5 #TODO change
-        accuracy = metrics.accuracy_score(targets, outputs) #TODO macro-averaged F1-score
-        print(f"Accuracy Score = {accuracy}")
-        if accuracy > best_accuracy:
-            torch.save(model.state_dict(), config.MODEL_PATH)
-            best_accuracy = accuracy
+    best_f1 = 0
+    for epoch in tqdm(range(1, config.EPOCHS+1)):
+        pred_train, targ_train, loss_train = engine.train_fn(train_data_loader, model, optimizer, device, scheduler, epoch)
+        f1_train = metrics.f1_score(targ_train, pred_train, average=macro)
+        acc_train = metrics.accuracy(targ_train, pred_train)
+        
+        pred_val, targ_val, loss_val = engine.val_fn(val_data_loader, model, device)
+        f1_val = metrics.f1_score(targ_val, pred_val, average=macro)
+        acc_val = metrics.accuracy(targ_val, pred_val)
+        
+        print(f"f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(f1_train, acc_train, loss_train))
+        print(f"f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(f1_val, acc_val, loss_val))
+        if f1_val > best_f1:
+            torch.save(model.state_dict(), config.LOGS_PATH)
+            best_f1 = f1_val
+
+
+
 
     
     
     
-    
+    #TODO algument green search tring to improve the optimazer
     
     
     
