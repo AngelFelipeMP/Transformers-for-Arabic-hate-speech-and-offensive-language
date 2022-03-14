@@ -53,7 +53,8 @@ def process_OSACT2022_data(data_path, header, text_col, labels_col, index_col, c
 
 
 def map_labels(df, labels_col):
-    df.replace({number: string for col, labels in labels.items() for string, number in labels.itens()}, inplace=True)
+    for col, labels in labels_col.items():
+        df.replace({col:{number: string for string, number in labels.items()}}, inplace=True)
     return df
     
 
