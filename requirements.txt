@@ -1,0 +1,2 @@
+farasapy==0.0.14
+PyArabic==0.6.14

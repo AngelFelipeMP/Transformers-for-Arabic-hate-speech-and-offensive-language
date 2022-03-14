@@ -2,7 +2,7 @@ import os
 import shutil
 import pandas as pd
 import gdown
-from arabert.preprocess import ArabertPreprocessor
+from preprocess import ArabertPreprocessor
 import config
 
 def download_data(data_path, data_urls):
@@ -26,39 +26,41 @@ def download_data(data_path, data_urls):
         
 
 
-def process_data(data_path, header, text_col, labels_col, index_col):
-    arabic_prep = ArabertPreprocessor("aubmindlab/bert-base-arabertv2")
-    files = os.listdir(data_path)
+def process_OSACT2022_data(data_path, header, text_col, labels_col, index_col, columns_to_read):
+    arabic_prep = ArabertPreprocessor("aubmindlab/bert-base-arabertv2", keep_emojis = True)
+    files = [f for f in os.listdir(data_path) if 'processed' not in f]
     
     for file in files:
-        df = pd.read_csv(file, sep='\t', header=header)
+        df = pd.read_csv(data_path + '/' + file, sep='\t', header=None, usecols=columns_to_read)
         
+        if 'train' in file or 'dev' in file:
+            df[df.shape[1]+1] = df.iloc[:,-1].apply(lambda x: x if x == 'NOT_HS' else 'HS')
+            df = df[df.columns.tolist()[:-2] + df.columns.tolist()[-1:] + df.columns.tolist()[-2:-1]]
+            df.replace(labels_col, inplace=True)
+            df.columns = header
+        else:
+            df.columns = header[:-3]
+
         text_col_processed = text_col + '_processed'
-        pass_value_config('DATASET_TEXT_PROCESSED', text_col_processed)
-        df[text_col_processed] = df.loc[:, text_col].apply(lambda x: arabic_prep(x))
+        pass_value_config('DATASET_TEXT_PROCESSED', '\'' +  text_col_processed + '\'')
+        df[text_col_processed] = df.loc[:, text_col].apply(lambda x: arabic_prep.preprocess(x))
         
-        for col, labels in labels_col.items():
-            df[col] = df.replace(labels, inplace=True)
-    
-        dataset_name = '"/' + file[:-4] + '_processed' + '.txt"'
-        value = 'DATA_PATH' + ' + ' + dataset_name
+        dataset_name =  file[:-4] + '_processed' + '.txt'
         variable = 'DATASET' + ['_TRAIN' if 'train' in file else '_DEV' if 'dev' in file else '_TEST'][0]
-        pass_value_config(variable, dataset_name)
+        pass_value_config(variable, '\'' + dataset_name + '\'')
         
-        df.to_csv(data_path + dataset_name, index=False, sep='\t',  index_label=index_col)
+        df.to_csv(data_path + '/' + dataset_name, index=False, sep='\t',  index_label=index_col)
 
 
 def map_labels(df, labels_col):
-    for col, labels in labels_col.items():
-        df[col] = df.replace({v: k for k, v in labels.items()}, inplace=True)
+    df.replace({number: string for col, labels in labels.items() for string, number in labels.itens()}, inplace=True)
     return df
     
 
-
 def pass_value_config(variable, value):
-    with open(config.CODE_PATH + 'config.py', 'r') as conf:
+    with open(config.CODE_PATH + '/' + 'config.py', 'r') as conf:
         content = conf.read()
-        new = content.replace(variable + ' = ', variable + ' = ' + value)
+        new = content.replace(variable + ' = ' + "''", variable + ' = ' +  value )
         
-    with open(config.CODE_PATH + 'config.py', 'w') as conf_new:
+    with open(config.CODE_PATH + '/' + 'config.py', 'w') as conf_new:
         conf_new.write(new)
