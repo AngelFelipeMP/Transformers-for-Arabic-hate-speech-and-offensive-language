@@ -19,7 +19,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, embe
         
         train_dataset = dataset.TransformerDataset(
             review=df_train[config.DATASET_TEXT_PROCESSED].values,
-            target=df_train[task].values,
+            target=df_train.loc[df[task]>=0, task].values,
             max_len=max_len,
             transformer=transformer
         )
@@ -32,7 +32,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, embe
 
         val_dataset = dataset.TransformerDataset(
             review=df_val[config.DATASET_TEXT_PROCESSED].values,
-            target=df_val[task].values,
+            target=df_val.loc[df[task]>=0, task].values,
             max_len=max_len,
             transformer=transformer
 
@@ -160,8 +160,6 @@ if __name__ == "__main__":
 
 
 
-    #TODO calculate training time -> use my func (may adapat) or find a python packed
-    #TODO adpate code to don't get classe -1 in task3
     #TODO test code with one aranic transformer
     #TODO algument green search tring to improve the optimazer
     #TODO check dataset max len
