@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
-from transformers import AutoModel
+from transformers import AutoModel, AutoConfig
 
 class TransforomerModel(nn.Module):
-    def __init__(self, transformer, drop_out, embedding_size, number_of_classes):
+    def __init__(self, transformer, drop_out, number_of_classes):
         super(TransforomerModel, self).__init__()
         self.number_of_classes = number_of_classes
-        self.embedding_size = embedding_size
+        self.embedding_size = AutoConfig.from_pretrained(transformer).hidden_size
         self.transformer = AutoModel.from_pretrained(transformer)
         self.dropout = nn.Dropout(drop_out)
         self.classifier = classifier_()
@@ -24,8 +24,6 @@ class TransforomerModel(nn.Module):
         drop = self.dropout(cat)
         
         return self.classifier(drop)
-
-#COMMENT 'embedding_size' may change for each model
 
 
 

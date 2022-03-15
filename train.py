@@ -15,7 +15,7 @@ from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
 
 
-def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, embedding_size, lr, best_f1, df_results):
+def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, best_f1, df_results):
         
         train_dataset = dataset.TransformerDataset(
             review=df_train[config.DATASET_TEXT_PROCESSED].values,
@@ -43,8 +43,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, embe
         )
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model = TransforomerModel(transformer, drop_out, embedding_size, 
-                                    number_of_classes=len(df.loc[df[task]>=0, task].unique()))
+        model = TransforomerModel(transformer, drop_out, number_of_classes=len(df.loc[df[task]>=0, task].unique()))
         model.to(device)
         
         param_optimizer = list(model.named_parameters())
@@ -127,7 +126,7 @@ if __name__ == "__main__":
     cycle = 0
     
     for task in config.LABELS:
-        for transformer, embedding_size in config.TRANSFORMERS.item():
+        for transformer in config.TRANSFORMERS:
             best_f1 = 0
             for max_len in config.MAX_LEN:
                 for batch_size in config.BATCH_SIZE:
@@ -146,8 +145,7 @@ if __name__ == "__main__":
                                     task, 
                                     transformer, 
                                     batch_size, 
-                                    drop_out, 
-                                    embedding_size,
+                                    drop_out,
                                     lr, 
                                     best_f1, 
                                     df_results)
@@ -158,11 +156,13 @@ if __name__ == "__main__":
                             print(f'Total time:{datetime.timedelta(seconds=(cycle * inter))} 
                                     Passed time: {datetime.timedelta(seconds=(cycle*inter_cont))} 
                                     Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
-
-
-    #TODO check dataset max len
-    #TODO select greed search parameters
+    
+    #TODO remove save result from run() do it outside
+    #TODO may round results inside 10-fold (last loop)
+    #TODO save results
+    #TODO check all code
     #TODO test code with one aranic transformer
+    #TODO check all model in the remoto for make sure that the GPU memory will be enough
     
     
     
