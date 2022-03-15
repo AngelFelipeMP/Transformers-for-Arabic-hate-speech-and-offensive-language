@@ -46,7 +46,7 @@ def train_fn(data_loader, model, optimizer, device, scheduler, epoch):
         
 
 
-def val_fn(data_loader, model, device):
+def eval_fn(data_loader, model, device):
     model.eval()
     fin_targets = []
     fin_predictions = []

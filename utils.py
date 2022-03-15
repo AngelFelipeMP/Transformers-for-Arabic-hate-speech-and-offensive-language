@@ -33,17 +33,21 @@ def process_OSACT2022_data(data_path, header, text_col, labels_col, index_col, c
     for file in files:
         df = pd.read_csv(data_path + '/' + file, sep='\t', header=None, usecols=columns_to_read)
         
+        print(df)
+        
         if 'train' in file or 'dev' in file:
             df[df.shape[1]+1] = df.iloc[:,-1].apply(lambda x: x if x == 'NOT_HS' else 'HS')
             df = df[df.columns.tolist()[:-2] + df.columns.tolist()[-1:] + df.columns.tolist()[-2:-1]]
-            df.replace(labels_col, inplace=True)
             df.columns = header
+            df.replace(labels_col, inplace=True)
+            print(df)
         else:
             df.columns = header[:-3]
 
         text_col_processed = text_col + '_processed'
         pass_value_config('DATASET_TEXT_PROCESSED', '\'' +  text_col_processed + '\'')
         df[text_col_processed] = df.loc[:, text_col].apply(lambda x: arabic_prep.preprocess(x))
+        print(df)
         
         dataset_name =  file[:-4] + '_processed' + '.txt'
         variable = 'DATASET' + ['_TRAIN' if 'train' in file else '_DEV' if 'dev' in file else '_TEST'][0]

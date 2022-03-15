@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 import random
 import config
+import time
+import datetime
 
 from model import TransforomerModel
 from sklearn import model_selection
@@ -118,13 +120,18 @@ if __name__ == "__main__":
     )
 
 
+    
+    inter = len(config.LABELS) * len(list(transformer.keys())) * len(config.MAX_LEN) * len(config.BATCH_SIZE) * len(config.LR)
+    inter_cont = 0
+    cycle = 0
+    
     for task in config.LABELS:
         for transformer, embedding_size in config.TRANSFORMERS.item():
             best_f1 = 0
             for max_len in config.MAX_LEN:
                 for batch_size in config.BATCH_SIZE:
                     for lr in config.LR:
-                
+                        start = time.time()
         
                         for train_index, val_index in skf.split(dfx[config.DATASET_TEXT_PROCESSED], dfx[task]):
                             df_train = dfx.loc[train_index]
@@ -140,17 +147,24 @@ if __name__ == "__main__":
                                 drop_out, 
                                 embedding_size, 
                                 number_of_classes, 
-                                lr, best_f1, 
+                                lr, 
+                                best_f1, 
                                 df_results)
-        
+                        
+                        end = time.time()
+                        inter_cont += 1
+                        cycle =  cycle + (((start - end) - cycle)/inter_cont)
+                        print(f'Total time:{datetime.timedelta(seconds=(cycle * inter))} 
+                                Passed time: {datetime.timedelta(seconds=(cycle*inter_cont))} 
+                                Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
 
-    
 
-    #TODO testar data.py
-    #TODO testar utils.py
-    #TODO testar tqdm
+
+    #TODO calculate training time -> use my func (may adapat) or find a python packed
+    #TODO adpate code to don't get classe -1 in task3
     #TODO test code with one aranic transformer
     #TODO algument green search tring to improve the optimazer
+    #TODO check dataset max len
     
     
     
@@ -163,21 +177,21 @@ if __name__ == "__main__":
     
     
 
-pre_trained_model = "bert-base-uncased"
-transformer = AutoModel.from_pretrained(pre_trained_model)
-tokenizer = AutoTokenizer.from_pretrained(pre_trained_model)
+# pre_trained_model = "bert-base-uncased"
+# transformer = AutoModel.from_pretrained(pre_trained_model)
+# tokenizer = AutoTokenizer.from_pretrained(pre_trained_model)
 
-max_len = 15
-Example1 = "Angel table home car"
-Example2 = "bhabha char roofing house get"
-Example3 = "I wan to go to the beach for surfing"
+# max_len = 15
+# Example1 = "Angel table home car"
+# Example2 = "bhabha char roofing house get"
+# Example3 = "I wan to go to the beach for surfing"
 
-pt_batch = tokenizer(
-    [Example1, Example2, Example3],
-    padding=True,
-    truncation=True,
-    add_special_tokens=True,
-    max_length=max_len,
-    return_tensors="pt")
+# pt_batch = tokenizer(
+#     [Example1, Example2, Example3],
+#     padding=True,
+#     truncation=True,
+#     add_special_tokens=True,
+#     max_length=max_len,
+#     return_tensors="pt")
 
-print(pt_batch)
+# print(pt_batch)
