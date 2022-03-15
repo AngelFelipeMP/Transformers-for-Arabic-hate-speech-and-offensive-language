@@ -15,7 +15,7 @@ from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
 
 
-def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, embedding_size, number_of_classes, lr, best_f1, df_results):
+def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, embedding_size, lr, best_f1, df_results):
         
         train_dataset = dataset.TransformerDataset(
             review=df_train[config.DATASET_TEXT_PROCESSED].values,
@@ -43,7 +43,8 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, embe
         )
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model = TransforomerModel(transformer, drop_out, embedding_size, number_of_classes)
+        model = TransforomerModel(transformer, drop_out, embedding_size, 
+                                    number_of_classes=len(df.loc[df[task]>=0, task].unique()))
         model.to(device)
         
         param_optimizer = list(model.named_parameters())
@@ -130,39 +131,38 @@ if __name__ == "__main__":
             best_f1 = 0
             for max_len in config.MAX_LEN:
                 for batch_size in config.BATCH_SIZE:
-                    for lr in config.LR:
-                        start = time.time()
-        
-                        for train_index, val_index in skf.split(dfx[config.DATASET_TEXT_PROCESSED], dfx[task]):
-                            df_train = dfx.loc[train_index]
-                            df_val = dfx.loc[val_index]
+                    for drop_out in config.DROPOUT:
+                        for lr in config.LR:
+                            start = time.time()
+            
+                            for train_index, val_index in skf.split(dfx[config.DATASET_TEXT_PROCESSED], dfx[task]):
+                                df_train = dfx.loc[train_index]
+                                df_val = dfx.loc[val_index]
+                                
+                                
+                                run(df_train, 
+                                    df_val, 
+                                    max_len, 
+                                    task, 
+                                    transformer, 
+                                    batch_size, 
+                                    drop_out, 
+                                    embedding_size,
+                                    lr, 
+                                    best_f1, 
+                                    df_results)
                             
-                            
-                            run(df_train, 
-                                df_val, 
-                                max_len, 
-                                task, 
-                                transformer, 
-                                batch_size, 
-                                drop_out, 
-                                embedding_size, 
-                                number_of_classes, 
-                                lr, 
-                                best_f1, 
-                                df_results)
-                        
-                        end = time.time()
-                        inter_cont += 1
-                        cycle =  cycle + (((start - end) - cycle)/inter_cont)
-                        print(f'Total time:{datetime.timedelta(seconds=(cycle * inter))} 
-                                Passed time: {datetime.timedelta(seconds=(cycle*inter_cont))} 
-                                Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
+                            end = time.time()
+                            inter_cont += 1
+                            cycle =  cycle + (((start - end) - cycle)/inter_cont)
+                            print(f'Total time:{datetime.timedelta(seconds=(cycle * inter))} 
+                                    Passed time: {datetime.timedelta(seconds=(cycle*inter_cont))} 
+                                    Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
 
 
-
-    #TODO test code with one aranic transformer
-    #TODO algument green search tring to improve the optimazer
     #TODO check dataset max len
+    #TODO select greed search parameters
+    #TODO test code with one aranic transformer
     
     
     
