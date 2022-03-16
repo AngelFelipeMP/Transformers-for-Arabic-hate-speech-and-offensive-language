@@ -17,7 +17,6 @@ if __name__ == "__main__":
 
         df['tokens'] = df['text_processed'].apply(lambda x: tokenizer.tokenize(x))
         df['number_tokens'] = df['tokens'].apply(lambda x: len(x))
-        # print(df.loc[df['number_tokens']>512])
 
         ax = df['number_tokens'].plot.hist(bins=20, range=(0, 512))
         ax.plot()
