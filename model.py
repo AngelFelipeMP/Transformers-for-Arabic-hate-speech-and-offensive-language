@@ -9,12 +9,9 @@ class TransforomerModel(nn.Module):
         self.embedding_size = AutoConfig.from_pretrained(transformer).hidden_size
         self.transformer = AutoModel.from_pretrained(transformer)
         self.dropout = nn.Dropout(drop_out)
-        self.classifier = classifier_()
         
-        
-    def classifier_(self):
+    def classifier(self):
         return nn.Linear(self.embedding_size * 2, self.number_of_classes)
-        
         
     def forward(self, ids, mask, token_type_ids):
         last_hidden_state, _ = self.transformer(ids, attention_mask=mask, token_type_ids=token_type_ids)
