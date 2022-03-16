@@ -87,15 +87,17 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
                                 'accuracy_train':acc_train,
                                 'f1-macro_train':f1_train
                                 'accuracy_val':acc_val,
-                                'f1-macro_val':f1_val,
-                                ignore_index=True
-            }
+                                'f1-macro_val':f1_val
+                            }, ignore_index=True
+            )
             
             print(f"f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(f1_train, acc_train, loss_train))
             print(f"f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(f1_val, acc_val, loss_val))
             if f1_val > best_f1:
                 torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
                 best_f1 = f1_val
+        
+        return df_results
 
 if __name__ == "__main__":
     seed_val = 17
@@ -113,7 +115,7 @@ if __name__ == "__main__":
                                         'max_len',
                                         'batch_size',
                                         'lr',
-                                        'accuracy_train','
+                                        'accuracy_train',
                                         'f1-macro_train',
                                         'accuracy_val',
                                         'f1-macro_val']
@@ -139,16 +141,28 @@ if __name__ == "__main__":
                                 df_val = dfx.loc[val_index]
                                 
                                 
-                                run(df_train, 
-                                    df_val, 
-                                    max_len, 
-                                    task, 
-                                    transformer, 
-                                    batch_size, 
-                                    drop_out,
-                                    lr, 
-                                    best_f1, 
-                                    df_results)
+                                df_results = run(df_train,
+                                                    df_val, 
+                                                    max_len, 
+                                                    task, 
+                                                    transformer, 
+                                                    batch_size, 
+                                                    drop_out,
+                                                    lr, 
+                                                    best_f1, 
+                                                    df_results)
+                            
+                            df_results = df_results.groupby(['task',
+                                                            'epoch',
+                                                            'transformer',
+                                                            'max_len',
+                                                            'batch_size',
+                                                            'lr',], as_index=False, sort=False)['accuracy_train',
+                                                                                                'f1-macro_train',
+                                                                                                'accuracy_val',
+                                                                                                'f1-macro_val'].mean()
+                            
+                            df_results.to_csv(config.LOGS_PATH, index=False)
                             
                             end = time.time()
                             inter_cont += 1
@@ -157,12 +171,12 @@ if __name__ == "__main__":
                                     Passed time: {datetime.timedelta(seconds=(cycle*inter_cont))} 
                                     Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
     
-    #TODO remove save result from run() do it outside
     #TODO may round results inside 10-fold (last loop)
-    #TODO save results
+    #TODO save results each task/model/???
     #TODO check all code
     #TODO test code with one aranic transformer
     #TODO check all model in the remoto for make sure that the GPU memory will be enough
+    #COMMENT change the round values and save csv after I test the code to transformer for loop
     
     
     
