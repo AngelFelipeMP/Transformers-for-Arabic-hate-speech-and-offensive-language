@@ -56,12 +56,6 @@ def process_OSACT2022_data(data_path, header, text_col, labels_col, index_col, c
         df.to_csv(data_path + '/' + dataset_name, index=False, sep='\t',  index_label=index_col)
 
 
-def map_labels(df, labels_col):
-    for col, labels in labels_col.items():
-        df.replace({col:{number: string for string, number in labels.items()}}, inplace=True)
-    return df
-    
-
 def pass_value_config(variable, value):
     with open(config.CODE_PATH + '/' + 'config.py', 'r') as conf:
         content = conf.read()
@@ -69,3 +63,9 @@ def pass_value_config(variable, value):
         
     with open(config.CODE_PATH + '/' + 'config.py', 'w') as conf_new:
         conf_new.write(new)
+
+
+def map_labels(df, labels_col):
+    for col, labels in labels_col.items():
+        df.replace({col:{number: string for string, number in labels.items()}}, inplace=True)
+    return df

@@ -10,7 +10,7 @@ import time
 import datetime
 
 from model import TransforomerModel
-from sklearn import model_selection
+from sklearn.model_selection import StratifiedKFold
 from sklearn import metrics
 from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
@@ -20,7 +20,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
         
         train_dataset = dataset.TransformerDataset(
             review=df_train[config.DATASET_TEXT_PROCESSED].values,
-            target=df_train.loc[df[task]>=0, task].values,
+            target=df_train[task].values,
             max_len=max_len,
             transformer=transformer
         )
@@ -33,7 +33,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
 
         val_dataset = dataset.TransformerDataset(
             review=df_val[config.DATASET_TEXT_PROCESSED].values,
-            target=df_val.loc[df[task]>=0, task].values,
+            target=df_val.loc[task].values,
             max_len=max_len,
             transformer=transformer
 
@@ -44,7 +44,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
         )
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model = TransforomerModel(transformer, drop_out, number_of_classes=len(df.loc[df[task]>=0, task].unique()))
+        model = TransforomerModel(transformer, drop_out, number_of_classes=len(df_train.loc[task].unique()))
         model.to(device)
         
         param_optimizer = list(model.named_parameters())
@@ -79,7 +79,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
             f1_val = metrics.f1_score(targ_val, pred_val, average=macro)
             acc_val = metrics.accuracy(targ_val, pred_val)
             
-            df_results.append({'task':task,
+            df_new_results = pd.DataFrame({'task':task,
                                 'epoch':epoch,
                                 'transformer':transformer,
                                 'max_len':max_len,
@@ -89,8 +89,10 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
                                 'f1-macro_train':f1_train
                                 'accuracy_val':acc_val,
                                 'f1-macro_val':f1_val
-                            }, ignore_index=True
-            )
+                            }
+            ) 
+            df_results = pd.concat([df_results, df_new_results], ignore_index=True))
+            
             
             print(f"f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(f1_train, acc_train, loss_train))
             print(f"f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(f1_val, acc_val, loss_val))
@@ -104,14 +106,13 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
         return df_results
 
 if __name__ == "__main__":
-    seed_val = 17
-    random.seed(seed_val)
-    np.random.seed(seed_val)
-    torch.manual_seed(seed_val)
-    torch.cuda.manual_seed_all(seed_val)
+    random.seed(config.SEED)
+    np.random.seed(config.SEED)
+    torch.manual_seed(config.SEED)
+    torch.cuda.manual_seed_all(config.SEED)
 
     dfx = pd.read_csv(config.DATASET_TRAIN, sep='\t', index_col=config.DATASET_INDEX).fillna("none")
-    skf = StratifiedKFold(n_splits=config.SPLITS, random_state=seed_val)
+    skf = StratifiedKFold(n_splits=config.SPLITS, random_state=config.SEED)
 
     df_results = pd.DataFrame(columns=['task',
                                         'epoch',
@@ -122,12 +123,13 @@ if __name__ == "__main__":
                                         'accuracy_train',
                                         'f1-macro_train',
                                         'accuracy_val',
-                                        'f1-macro_val']
+                                        'f1-macro_val'
+            ]
     )
 
 
     
-    inter = len(config.LABELS) * len(list(transformer.keys())) * len(config.MAX_LEN) * len(config.BATCH_SIZE) * len(config.LR)
+    inter = len(config.LABELS) * len(config.TRANSFORMERS) * len(config.MAX_LEN) * len(config.BATCH_SIZE) * len(config.DROPOUT) * len(config.LR)
     inter_cont = 0
     cycle = 0
     
@@ -141,9 +143,8 @@ if __name__ == "__main__":
                             start = time.time()
             
                             for train_index, val_index in skf.split(dfx[config.DATASET_TEXT_PROCESSED], dfx[task]):
-                                df_train = dfx.loc[train_index]
-                                df_val = dfx.loc[val_index]
-                                
+                                df_train = dfx.loc[train_index].loc[dfx[task]>=0]
+                                df_val = dfx.loc[val_index].loc[dfx[task]>=0]
                                 
                                 df_results = run(df_train,
                                                     df_val, 
@@ -154,7 +155,8 @@ if __name__ == "__main__":
                                                     drop_out,
                                                     lr, 
                                                     best_f1, 
-                                                    df_results)
+                                                    df_results
+                                )
                             
                             df_results = df_results.groupby(['task',
                                                             'epoch',
@@ -172,14 +174,14 @@ if __name__ == "__main__":
                             inter_cont += 1
                             cycle =  cycle + (((start - end) - cycle)/inter_cont)
                             print(f'Total time:{datetime.timedelta(seconds=(cycle * inter))} 
-                                    Passed time: {datetime.timedelta(seconds=(cycle*inter_cont))} 
+                                    Passed time: {datetime.timedelta(seconds=(cycle * inter_cont))} 
                                     Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
     
     
-    #TODO save results each task/model/???
-    #TODO check all code
+    #TODO adapt code for test
     #TODO test code with one aranic transformer
     #TODO check all model in the remoto for make sure that the GPU memory will be enough
+    #TODO remover commeted code from mode.py
     #COMMENT change the round values and save csv after I test the code to transformer for loop
     
     
