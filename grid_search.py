@@ -1,3 +1,4 @@
+import os
 import dataset
 import engine
 import torch
@@ -94,6 +95,9 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
             print(f"f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(f1_train, acc_train, loss_train))
             print(f"f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(f1_val, acc_val, loss_val))
             if f1_val > best_f1:
+                for file in os.listdir(config.LOGS_PATH):
+                    if task in file and transformer in file:
+                        os.remove(config.LOGS_PATH + '/' + file)
                 torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
                 best_f1 = f1_val
         
@@ -162,7 +166,7 @@ if __name__ == "__main__":
                                                                                                 'accuracy_val',
                                                                                                 'f1-macro_val'].mean()
                             
-                            df_results.to_csv(config.LOGS_PATH, index=False)
+                            df_results.to_csv(config.LOGS_PATH + '/' + 'results' + '.csv', index=False)
                             
                             end = time.time()
                             inter_cont += 1
@@ -171,7 +175,7 @@ if __name__ == "__main__":
                                     Passed time: {datetime.timedelta(seconds=(cycle*inter_cont))} 
                                     Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
     
-    #TODO may round results inside 10-fold (last loop)
+    
     #TODO save results each task/model/???
     #TODO check all code
     #TODO test code with one aranic transformer
