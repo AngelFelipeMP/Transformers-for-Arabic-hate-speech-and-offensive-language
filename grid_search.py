@@ -20,7 +20,7 @@ from transformers import get_linear_schedule_with_warmup
 def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, best_f1, df_results):
     
     train_dataset = dataset.TransformerDataset(
-        text=df_train[config.DATASET_TEXT_PROCESSED].to_list(),
+        text=df_train[config.DATASET_TEXT_PROCESSED].values,
         target=df_train[task].values,
         max_len=max_len,
         transformer=transformer
@@ -33,8 +33,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
     )
 
     val_dataset = dataset.TransformerDataset(
-        # text=df_val[config.DATASET_TEXT_PROCESSED].values,
-        text=df_val[config.DATASET_TEXT_PROCESSED].to_list(),
+        text=df_val[config.DATASET_TEXT_PROCESSED].values,
         target=df_val[task].values,
         max_len=max_len,
         transformer=transformer
