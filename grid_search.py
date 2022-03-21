@@ -74,12 +74,12 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
 
     for epoch in tqdm(range(1, config.EPOCHS+1)):
         pred_train, targ_train, loss_train = engine.train_fn(train_data_loader, model, optimizer, device, scheduler, epoch)
-        f1_train = metrics.f1_score(targ_train, pred_train, average=macro)
-        acc_train = metrics.accuracy(targ_train, pred_train)
+        f1_train = metrics.f1_score(targ_train, pred_train, average='macro')
+        acc_train = metrics.accuracy_score(targ_train, pred_train)
         
-        pred_val, targ_val, loss_val = engine.val_fn(val_data_loader, model, device)
-        f1_val = metrics.f1_score(targ_val, pred_val, average=macro)
-        acc_val = metrics.accuracy(targ_val, pred_val)
+        pred_val, targ_val, loss_val = engine.eval_fn(val_data_loader, model, device)
+        f1_val = metrics.f1_score(targ_val, pred_val, average='macro')
+        acc_val = metrics.accuracy_score(targ_val, pred_val)
         
         df_new_results = pd.DataFrame({'task':task,
                             'epoch':epoch,
