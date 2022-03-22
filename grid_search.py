@@ -46,7 +46,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
     )
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = TransforomerModel(transformer, drop_out, number_of_classes=len(df_train[task].unique()))
+    model = TransforomerModel(transformer, drop_out, number_of_classes=df_train[task].max()+1)
     model.to(device)
     
     param_optimizer = list(model.named_parameters())
@@ -72,7 +72,10 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
         optimizer, num_warmup_steps=0, num_training_steps=num_train_steps
     )
 
-    for epoch in tqdm(range(1, config.EPOCHS+1)):
+    # for epoch in tqdm(range(1, config.EPOCHS+1), desc='Total Epocs {:1d}'.format(config.EPOCHS)):
+    epoch_bar = tqdm(total=config.EPOCHS, desc='Epochs', position=2)
+    
+    for epoch in range(1, config.EPOCHS+1):
         pred_train, targ_train, loss_train = engine.train_fn(train_data_loader, model, optimizer, device, scheduler, epoch)
         f1_train = metrics.f1_score(targ_train, pred_train, average='macro')
         acc_train = metrics.accuracy_score(targ_train, pred_train)
@@ -91,20 +94,21 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
                             'f1-macro_train':f1_train,
                             'accuracy_val':acc_val,
                             'f1-macro_val':f1_val
-                        }
+                        }, index=[0]
         ) 
         df_results = pd.concat([df_results, df_new_results], ignore_index=True)
         
+        # tqdm.write("f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(f1_train, acc_train, loss_train))
+        # tqdm.write("f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(f1_val, acc_val, loss_val))
+        epoch_bar.update(1)
         
-        print("f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(f1_train, acc_train, loss_train))
-        print("f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(f1_val, acc_val, loss_val))
         if f1_val > best_f1:
             for file in os.listdir(config.LOGS_PATH):
                 if task in file and transformer in file:
                     os.remove(config.LOGS_PATH + '/' + file)
-            torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
+            torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer.split("/")[1]}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
             best_f1 = f1_val
-    
+
     return df_results
 
 if __name__ == "__main__":
@@ -135,6 +139,8 @@ if __name__ == "__main__":
     inter_cont = 0
     cycle = 0
     
+    grid_search_bar = tqdm(total=inter, desc='Grid Search', position=0)
+    
     for task in config.LABELS:
         df_grid_search = dfx.loc[dfx[task]>=0].reset_index(drop=True)
         for transformer in config.TRANSFORMERS:
@@ -144,7 +150,9 @@ if __name__ == "__main__":
                     for drop_out in config.DROPOUT:
                         for lr in config.LR:
                             start = time.time()
-            
+
+                            cross_validation_bar = tqdm(total=config.SPLITS, desc='Cross-Validation', position=1)
+                            
                             for train_index, val_index in skf.split(df_grid_search[config.DATASET_TEXT_PROCESSED], df_grid_search[task]):
                                 df_train = df_grid_search.loc[train_index]
                                 df_val = df_grid_search.loc[val_index]
@@ -160,6 +168,9 @@ if __name__ == "__main__":
                                                     best_f1, 
                                                     df_results
                                 )
+                                
+                                cross_validation_bar.update(1)
+                            grid_search_bar.update(1)
                             
                             df_results = df_results.groupby(['task',
                                                             'epoch',
@@ -180,7 +191,7 @@ if __name__ == "__main__":
                             print(f'Passed time: {datetime.timedelta(seconds=(cycle * inter_cont))}') 
                             print(f'Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
     
-    
+    #TODO solve log prints
     #TODO adapt code for test
     #TODO test code with one aranic transformer
     #TODO check all model in the remoto for make sure that the GPU memory will be enough

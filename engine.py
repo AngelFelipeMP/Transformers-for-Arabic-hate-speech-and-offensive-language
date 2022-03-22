@@ -13,9 +13,17 @@ def train_fn(data_loader, model, optimizer, device, scheduler, epoch):
     fin_predictions = []
     total_loss = 0
     
-    progress_bar = tqdm(data_loader, desc='Epoch {:1d}'.format(epoch))
+    # progress_bar = tqdm(data_loader, desc='Epoch {:1d}'.format(epoch))
 
-    for d in progress_bar:
+    # for d in progress_bar:
+    #     ids = d["ids"]
+    #     token_type_ids = d["token_type_ids"]
+    #     mask = d["mask"]
+    #     targets = d["targets"]
+
+    epoch_batch = tqdm(total=len(data_loader), desc='Batch', position=3)
+    
+    for d in data_loader:
         ids = d["ids"]
         token_type_ids = d["token_type_ids"]
         mask = d["mask"]
@@ -39,7 +47,8 @@ def train_fn(data_loader, model, optimizer, device, scheduler, epoch):
         optimizer.step()
         scheduler.step()
         
-        progress_bar.set_postfix({'training_loss': '{:.3f}'.format(loss.cpu().detach().numpy().tolist()/len(d))})
+        epoch_batch.update(1)
+        # progress_bar.set_postfix({'training_loss': '{:.3f}'.format(loss.cpu().detach().numpy().tolist()/len(d))})
         
     return fin_predictions, fin_targets, total_loss/len(data_loader)
         
