@@ -11,10 +11,14 @@ import datetime
 from tqdm import tqdm
 
 from model import TransforomerModel
+import warnings
+warnings.filterwarnings('ignore') 
 from sklearn.model_selection import StratifiedKFold
 from sklearn import metrics
 from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
+from transformers import logging
+logging.set_verbosity_error()
 
 
 def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, best_f1, df_results):
@@ -71,12 +75,9 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=0, num_training_steps=num_train_steps
     )
-
-    # for epoch in tqdm(range(1, config.EPOCHS+1), desc='Total Epocs {:1d}'.format(config.EPOCHS)):
-    epoch_bar = tqdm(total=config.EPOCHS, desc='Epochs', position=2)
     
     for epoch in range(1, config.EPOCHS+1):
-        pred_train, targ_train, loss_train = engine.train_fn(train_data_loader, model, optimizer, device, scheduler, epoch)
+        pred_train, targ_train, loss_train = engine.train_fn(train_data_loader, model, optimizer, device, scheduler)
         f1_train = metrics.f1_score(targ_train, pred_train, average='macro')
         acc_train = metrics.accuracy_score(targ_train, pred_train)
         
@@ -98,15 +99,13 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
         ) 
         df_results = pd.concat([df_results, df_new_results], ignore_index=True)
         
-        # tqdm.write("f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(f1_train, acc_train, loss_train))
-        # tqdm.write("f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(f1_val, acc_val, loss_val))
-        epoch_bar.update(1)
+        tqdm.write("Epoch {}/{} f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f} f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(epoch, config.EPOCHS, f1_train, acc_train, loss_train, f1_val, acc_val, loss_val))
         
         if f1_val > best_f1:
             for file in os.listdir(config.LOGS_PATH):
                 if task in file and transformer in file:
                     os.remove(config.LOGS_PATH + '/' + file)
-            torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer.split("/")[1]}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
+            torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer.split("/")[-1]}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
             best_f1 = f1_val
 
     return df_results
@@ -135,27 +134,32 @@ if __name__ == "__main__":
 
 
     
-    inter = len(config.LABELS) * len(config.TRANSFORMERS) * len(config.MAX_LEN) * len(config.BATCH_SIZE) * len(config.DROPOUT) * len(config.LR)
-    inter_cont = 0
-    cycle = 0
+    inter = len(config.LABELS) * len(config.TRANSFORMERS) * len(config.MAX_LEN) * len(config.BATCH_SIZE) * len(config.DROPOUT) * len(config.LR) * config.SPLITS
+    # inter_cont = 0
+    # cycle = 0
     
-    grid_search_bar = tqdm(total=inter, desc='Grid Search', position=0)
+    grid_search_bar = tqdm(total=inter, desc='GRID SEARCH', position=2)
+    tasks_bar = tqdm(total=len(config.LABELS), desc='TASK', position=1)
     
+    
+    
+    # for task in config.LABELS:
     for task in config.LABELS:
         df_grid_search = dfx.loc[dfx[task]>=0].reset_index(drop=True)
+        transformers_bar = tqdm(total=len(config.TRANSFORMERS), desc='TRANSFOMER', position=0)
         for transformer in config.TRANSFORMERS:
             best_f1 = 0
             for max_len in config.MAX_LEN:
                 for batch_size in config.BATCH_SIZE:
                     for drop_out in config.DROPOUT:
                         for lr in config.LR:
-                            start = time.time()
-
-                            cross_validation_bar = tqdm(total=config.SPLITS, desc='Cross-Validation', position=1)
                             
-                            for train_index, val_index in skf.split(df_grid_search[config.DATASET_TEXT_PROCESSED], df_grid_search[task]):
+                            for fold, (train_index, val_index) in enumerate(skf.split(df_grid_search[config.DATASET_TEXT_PROCESSED], df_grid_search[task])):
                                 df_train = df_grid_search.loc[train_index]
                                 df_val = df_grid_search.loc[val_index]
+                                
+                                # start = time.time()
+                                tqdm.write(f'\nTask: {task} Transfomer: {transformer.split("/")[-1]} Max_len: {max_len} Batch_size: {batch_size} Dropout: {drop_out} lr: {lr} Fold: {fold+1}/{config.SPLITS}')
                                 
                                 df_results = run(df_train,
                                                     df_val, 
@@ -168,10 +172,15 @@ if __name__ == "__main__":
                                                     best_f1, 
                                                     df_results
                                 )
-                                
-                                cross_validation_bar.update(1)
-                            grid_search_bar.update(1)
                             
+                                # end = time.time()
+                                # inter_cont += 1
+                                # cycle =  cycle + (((end - start) - cycle)/inter_cont)
+                                # tqdm.write(f'\nTotal time:{datetime.timedelta(seconds=(cycle * inter))}') 
+                                # tqdm.write(f'Passed time: {datetime.timedelta(seconds=(cycle * inter_cont))}') 
+                                # tqdm.write(f'Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
+                            
+                                grid_search_bar.update(1)
                             df_results = df_results.groupby(['task',
                                                             'epoch',
                                                             'transformer',
@@ -183,14 +192,11 @@ if __name__ == "__main__":
                                                                                                 'f1-macro_val'].mean()
                             
                             df_results.to_csv(config.LOGS_PATH + '/' + 'results' + '.csv', index=False)
-                            
-                            end = time.time()
-                            inter_cont += 1
-                            cycle =  cycle + (((start - end) - cycle)/inter_cont)
-                            print(f'Total time:{datetime.timedelta(seconds=(cycle * inter))}') 
-                            print(f'Passed time: {datetime.timedelta(seconds=(cycle * inter_cont))}') 
-                            print(f'Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
-    
+
+            transformers_bar.update(1)
+        tasks_bar.update(1)
+            
+            
     #TODO solve log prints
     #TODO adapt code for test
     #TODO test code with one aranic transformer
