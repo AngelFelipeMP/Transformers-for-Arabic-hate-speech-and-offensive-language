@@ -6,8 +6,6 @@ import pandas as pd
 import numpy as np
 import random
 import config
-import time
-import datetime
 from tqdm import tqdm
 
 from model import TransforomerModel
@@ -135,15 +133,11 @@ if __name__ == "__main__":
 
     
     inter = len(config.LABELS) * len(config.TRANSFORMERS) * len(config.MAX_LEN) * len(config.BATCH_SIZE) * len(config.DROPOUT) * len(config.LR) * config.SPLITS
-    # inter_cont = 0
-    # cycle = 0
-    
     grid_search_bar = tqdm(total=inter, desc='GRID SEARCH', position=2)
     tasks_bar = tqdm(total=len(config.LABELS), desc='TASK', position=1)
     
     
     
-    # for task in config.LABELS:
     for task in config.LABELS:
         df_grid_search = dfx.loc[dfx[task]>=0].reset_index(drop=True)
         transformers_bar = tqdm(total=len(config.TRANSFORMERS), desc='TRANSFOMER', position=0)
@@ -172,13 +166,6 @@ if __name__ == "__main__":
                                                     best_f1, 
                                                     df_results
                                 )
-                            
-                                # end = time.time()
-                                # inter_cont += 1
-                                # cycle =  cycle + (((end - start) - cycle)/inter_cont)
-                                # tqdm.write(f'\nTotal time:{datetime.timedelta(seconds=(cycle * inter))}') 
-                                # tqdm.write(f'Passed time: {datetime.timedelta(seconds=(cycle * inter_cont))}') 
-                                # tqdm.write(f'Reminder time: {datetime.timedelta(seconds=(cycle * (inter - inter_cont)))}')
                             
                                 grid_search_bar.update(1)
                             df_results = df_results.groupby(['task',
