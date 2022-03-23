@@ -183,7 +183,7 @@ if __name__ == "__main__":
             
     #TODO Create a env in the remoto
     #TODO test each transformer
-    #TODO Check for use two GPUs
+    #TODO Check for use two GPUsz
     #TODO check all model in the remoto for make sure that the GPU memory will be enough
     #TODO remover commeted code from mode.py
     #COMMENT change the round values and save csv after I test the code to transformer for loop
