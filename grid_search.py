@@ -91,8 +91,10 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
                             'lr':lr,
                             'accuracy_train':acc_train,
                             'f1-macro_train':f1_train,
+                            'loss_train':loss_train,
                             'accuracy_val':acc_val,
-                            'f1-macro_val':f1_val
+                            'f1-macro_val':f1_val,
+                            'loss_val':loss_val
                         }, index=[0]
         ) 
         df_results = pd.concat([df_results, df_new_results], ignore_index=True)
@@ -101,7 +103,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
         
         if f1_val > best_f1:
             for file in os.listdir(config.LOGS_PATH):
-                if task in file and transformer in file:
+                if task in file and transformer.split("/")[-1] in file:
                     os.remove(config.LOGS_PATH + '/' + file)
             torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer.split("/")[-1]}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
             best_f1 = f1_val
@@ -125,23 +127,19 @@ if __name__ == "__main__":
                                         'lr',
                                         'accuracy_train',
                                         'f1-macro_train',
+                                        'loss_train',
                                         'accuracy_val',
-                                        'f1-macro_val'
+                                        'f1-macro_val',
+                                        'loss_val'
             ]
     )
-
-
     
     inter = len(config.LABELS) * len(config.TRANSFORMERS) * len(config.MAX_LEN) * len(config.BATCH_SIZE) * len(config.DROPOUT) * len(config.LR) * config.SPLITS
     grid_search_bar = tqdm(total=inter, desc='GRID SEARCH', position=2)
-    tasks_bar = tqdm(total=len(config.LABELS), desc='TASK', position=1)
     
-    
-    
-    for task in config.LABELS:
+    for task in tqdm(config.LABELS, desc='TASKS', position=1):
         df_grid_search = dfx.loc[dfx[task]>=0].reset_index(drop=True)
-        transformers_bar = tqdm(total=len(config.TRANSFORMERS), desc='TRANSFOMER', position=0)
-        for transformer in config.TRANSFORMERS:
+        for transformer in tqdm(config.TRANSFORMERS, desc='TRANSFOMERS', position=0):
             best_f1 = 0
             for max_len in config.MAX_LEN:
                 for batch_size in config.BATCH_SIZE:
@@ -152,7 +150,6 @@ if __name__ == "__main__":
                                 df_train = df_grid_search.loc[train_index]
                                 df_val = df_grid_search.loc[val_index]
                                 
-                                # start = time.time()
                                 tqdm.write(f'\nTask: {task} Transfomer: {transformer.split("/")[-1]} Max_len: {max_len} Batch_size: {batch_size} Dropout: {drop_out} lr: {lr} Fold: {fold+1}/{config.SPLITS}')
                                 
                                 df_results = run(df_train,
@@ -168,6 +165,7 @@ if __name__ == "__main__":
                                 )
                             
                                 grid_search_bar.update(1)
+                            
                             df_results = df_results.groupby(['task',
                                                             'epoch',
                                                             'transformer',
@@ -175,18 +173,17 @@ if __name__ == "__main__":
                                                             'batch_size',
                                                             'lr',], as_index=False, sort=False)['accuracy_train',
                                                                                                 'f1-macro_train',
+                                                                                                'loss_train',
                                                                                                 'accuracy_val',
-                                                                                                'f1-macro_val'].mean()
+                                                                                                'f1-macro_val',
+                                                                                                'loss_val'].mean()
                             
                             df_results.to_csv(config.LOGS_PATH + '/' + 'results' + '.csv', index=False)
-
-            transformers_bar.update(1)
-        tasks_bar.update(1)
+                            
             
-            
-    #TODO solve log prints
-    #TODO adapt code for test
-    #TODO test code with one aranic transformer
+    #TODO Create a env in the remoto
+    #TODO test each transformer
+    #TODO Check for use two GPUs
     #TODO check all model in the remoto for make sure that the GPU memory will be enough
     #TODO remover commeted code from mode.py
     #COMMENT change the round values and save csv after I test the code to transformer for loop
