@@ -6,8 +6,11 @@ class TransformerDataset:
     def __init__(self, text, target, max_len, transformer):
         self.text = text
         self.target = target
-        self.tokenizer = AutoTokenizer.from_pretrained(transformer)
         self.max_len = max_len
+        self.tokenizer = AutoTokenizer.from_pretrained(transformer)
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+        
 
     def __len__(self):
         return len(self.text)
