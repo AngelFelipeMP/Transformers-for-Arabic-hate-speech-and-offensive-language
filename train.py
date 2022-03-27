@@ -19,23 +19,26 @@ logging.set_verbosity_error()
 
 def join_results():
     list_of_results = []
+    all_grid_search = DOMAIN_GRID_SEARCH + '.csv'
+    
     for file in os.listdir(config.LOGS_PATH):
-        if '.csv' in file and 'gridsearch.csv' not in file:
+        if '.csv' in file and all_grid_search not in file:
             list_of_results.append(pd.read_csv(config.LOGS_PATH + '/' + file))
             
     if len(list_of_results) > 1:
         df = pd.concat(list_of_results, ignore_index=True)
-        df.to_csv(config.LOGS_PATH + '/' + 'gridsearch' + '.csv', index=False)
+        df.to_csv(config.LOGS_PATH + '/' + all_grid_search, index=False)
             
 
 def best_parameters(task, transformer):
     join_results()
+    all_grid_search = DOMAIN_GRID_SEARCH + '.csv'
     
     for file in os.listdir(config.LOGS_PATH):
-        if 'gridsearch.csv' in file:
+        if all_grid_search in file:
             df = pd.read_csv(config.LOGS_PATH + '/' + file)
             parameters = df.loc[(df['transformer'] == transformer) & (df['task'] == task)].sort_values(by=['f1-macro_val'], ascending=False).iloc[0,:]
-
+            break
             
     return int(parameters['epoch']), int(parameters['max_len']), int(parameters['batch_size']), float(parameters['lr']), float(parameters['dropout'])
 
@@ -138,14 +141,6 @@ if __name__ == "__main__":
             best_epoch, max_len, batch_size, lr, drop_out = best_parameters(task, transformer)
             tqdm.write(f'\nTask: {task} Transfomer: {transformer.split("/")[-1]} Max_len: {max_len} Batch_size: {batch_size} Dropout: {drop_out} lr: {lr}')
             
-            # best_epoch = 1
-            # print(best_epoch)
-            # print(max_len)
-            # print(batch_size)
-            # print(lr)
-            # print(drop_out)
-            # quit()
-            
             df_results = train(df_results,
                                 df_train,
                                 task,
@@ -156,17 +151,7 @@ if __name__ == "__main__":
                                 batch_size,
                                 lr,
                                 drop_out,
-                                'Training'
-            ) 
-            ## save table
-            ## save model
+                                config.DOMAIN_TRAIN
+            )
             
-            df_results.to_csv(config.LOGS_PATH + '/' + 'train' + '.csv', index=False)
-            
-
-#TODO double check train.py
-#TODO set train.py and train
-#TODO write Validation.py
-#TODO write Train_all_data.py
-#TODO write test.py
-#DEBUG when I get new datasets from grid search UNCOMMENT "# parameters['drop_out']"
+            df_results.to_csv(config.LOGS_PATH + '/' + config.DOMAIN_TRAIN + '.csv', index=False)
