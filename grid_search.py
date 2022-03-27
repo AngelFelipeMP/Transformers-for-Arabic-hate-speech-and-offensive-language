@@ -89,6 +89,7 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
                             'max_len':max_len,
                             'batch_size':batch_size,
                             'lr':lr,
+                            'dropout':drop_out,
                             'accuracy_train':acc_train,
                             'f1-macro_train':f1_train,
                             'loss_train':loss_train,
@@ -101,12 +102,12 @@ def run(df_train, df_val, max_len, task, transformer, batch_size, drop_out, lr, 
         
         tqdm.write("Epoch {}/{} f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f} f1-macro_val = {:.3f}  accuracy_val = {:.3f}  loss_val = {:.3f}".format(epoch, config.EPOCHS, f1_train, acc_train, loss_train, f1_val, acc_val, loss_val))
         
-        if f1_val > best_f1:
-            for file in os.listdir(config.LOGS_PATH):
-                if task in file and transformer.split("/")[-1] in file:
-                    os.remove(config.LOGS_PATH + '/' + file)
-            torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer.split("/")[-1]}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
-            best_f1 = f1_val
+        # if f1_val > best_f1:
+        #     for file in os.listdir(config.LOGS_PATH):
+        #         if task in file and transformer.split("/")[-1] in file:
+        #             os.remove(config.LOGS_PATH + '/' + file)
+        #     torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer.split("/")[-1]}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
+        #     best_f1 = f1_val
 
     return df_results
 
@@ -125,6 +126,7 @@ if __name__ == "__main__":
                                         'max_len',
                                         'batch_size',
                                         'lr',
+                                        'dropout',
                                         'accuracy_train',
                                         'f1-macro_train',
                                         'loss_train',
@@ -140,7 +142,7 @@ if __name__ == "__main__":
     for task in tqdm(config.LABELS, desc='TASKS', position=1):
         df_grid_search = dfx.loc[dfx[task]>=0].reset_index(drop=True)
         for transformer in tqdm(config.TRANSFORMERS, desc='TRANSFOMERS', position=0):
-            best_f1 = 0
+            # best_f1 = 0
             for max_len in config.MAX_LEN:
                 for batch_size in config.BATCH_SIZE:
                     for drop_out in config.DROPOUT:
@@ -160,7 +162,7 @@ if __name__ == "__main__":
                                                     batch_size, 
                                                     drop_out,
                                                     lr, 
-                                                    best_f1, 
+                                                    # best_f1, 
                                                     df_results
                                 )
                             
@@ -171,7 +173,8 @@ if __name__ == "__main__":
                                                             'transformer',
                                                             'max_len',
                                                             'batch_size',
-                                                            'lr',], as_index=False, sort=False)['accuracy_train',
+                                                            'lr',
+                                                            'dropout'], as_index=False, sort=False)['accuracy_train',
                                                                                                 'f1-macro_train',
                                                                                                 'loss_train',
                                                                                                 'accuracy_val',
@@ -182,7 +185,7 @@ if __name__ == "__main__":
                             
             
     
-    
+#TODO may remove save models
     
     
     
