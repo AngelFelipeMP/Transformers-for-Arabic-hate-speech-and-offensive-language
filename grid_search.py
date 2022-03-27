@@ -181,7 +181,7 @@ if __name__ == "__main__":
                                                                                                 'f1-macro_val',
                                                                                                 'loss_val'].mean()
                             
-                            df_results.to_csv(config.LOGS_PATH + '/' + 'results' + '.csv', index=False)
+                            df_results.to_csv(config.LOGS_PATH + '/' + 'gridsearch' + '.csv', index=False)
                             
             
     

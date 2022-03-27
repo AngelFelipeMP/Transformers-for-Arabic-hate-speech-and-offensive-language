@@ -20,26 +20,26 @@ logging.set_verbosity_error()
 def join_results():
     list_of_results = []
     for file in os.listdir(config.LOGS_PATH):
-        if '.csv' in file and 'results.csv' not in file:
+        if '.csv' in file and 'gridsearch.csv' not in file:
             list_of_results.append(pd.read_csv(config.LOGS_PATH + '/' + file))
             
     if len(list_of_results) > 1:
         df = pd.concat(list_of_results, ignore_index=True)
-        df.to_csv(config.LOGS_PATH + '/' + 'results' + '.csv', index=False)
+        df.to_csv(config.LOGS_PATH + '/' + 'gridsearch' + '.csv', index=False)
             
 
 def best_parameters(task, transformer):
     join_results()
     
     for file in os.listdir(config.LOGS_PATH):
-        if 'results.csv' in file:
+        if 'gridsearch.csv' in file:
             df = pd.read_csv(config.LOGS_PATH + '/' + file)
             parameters = df.loc[(df['transformer'] == transformer) & (df['task'] == task)].sort_values(by=['f1-macro_val'], ascending=False).iloc[0,:]
 
             
     return int(parameters['epoch']), int(parameters['max_len']), int(parameters['batch_size']), float(parameters['lr']), float(parameters['dropout'])
 
-def train(df_results, df_train, task, transformer, epochs, best_epoch, max_len, batch_size, lr, drop_out):
+def train(df_results, df_train, task, transformer, epochs, best_epoch, max_len, batch_size, lr, drop_out, data):
     
     train_dataset = dataset.TransformerDataset(
         text=df_train[config.DATASET_TEXT_PROCESSED].values,
@@ -101,9 +101,9 @@ def train(df_results, df_train, task, transformer, epochs, best_epoch, max_len, 
         
         df_results = pd.concat([df_results, df_new_results], ignore_index=True)
         
-        tqdm.write("Epoch {}/{} f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(epoch, config.EPOCHS, f1_train, acc_train, loss_train))
+        tqdm.write("Epoch {}/{} f1-macro_training = {:.3f}  accuracy_training = {:.3f}  loss_training = {:.3f}".format(epoch, best_epoch, f1_train, acc_train, loss_train))
     
-    torch.save(model.state_dict(), f'{config.LOGS_PATH}/task[{task}]_transformer[{transformer.split("/")[-1]}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
+    torch.save(model.state_dict(), f'{config.LOGS_PATH}/{data}_task[{task}]_transformer[{transformer.split("/")[-1]}]_epoch[{epoch}]_maxlen[{max_len}]_batchsize[{batch_size}]_dropout[{drop_out}]_lr[{lr}].model')
 
     return df_results
 
@@ -136,7 +136,9 @@ if __name__ == "__main__":
         for transformer in config.TRANSFORMERS:
             
             best_epoch, max_len, batch_size, lr, drop_out = best_parameters(task, transformer)
-            best_epoch = 1
+            tqdm.write(f'\nTask: {task} Transfomer: {transformer.split("/")[-1]} Max_len: {max_len} Batch_size: {batch_size} Dropout: {drop_out} lr: {lr}')
+            
+            # best_epoch = 1
             # print(best_epoch)
             # print(max_len)
             # print(batch_size)
@@ -153,7 +155,8 @@ if __name__ == "__main__":
                                 max_len,
                                 batch_size,
                                 lr,
-                                drop_out
+                                drop_out,
+                                'Training'
             ) 
             ## save table
             ## save model
