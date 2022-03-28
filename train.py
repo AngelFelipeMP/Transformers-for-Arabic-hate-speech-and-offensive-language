@@ -19,7 +19,7 @@ logging.set_verbosity_error()
 
 def join_results():
     list_of_results = []
-    all_grid_search = DOMAIN_GRID_SEARCH + '.csv'
+    all_grid_search = config.DOMAIN_GRID_SEARCH + '.csv'
     
     for file in os.listdir(config.LOGS_PATH):
         if '.csv' in file and all_grid_search not in file:
@@ -32,7 +32,7 @@ def join_results():
 
 def best_parameters(task, transformer):
     join_results()
-    all_grid_search = DOMAIN_GRID_SEARCH + '.csv'
+    all_grid_search = config.DOMAIN_GRID_SEARCH + '.csv'
     
     for file in os.listdir(config.LOGS_PATH):
         if all_grid_search in file:
