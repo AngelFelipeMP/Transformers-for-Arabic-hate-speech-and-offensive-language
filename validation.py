@@ -37,15 +37,16 @@ def majority(series):
     choice = random.choice(keys)
     return choice
 
+
 def transformer_parameters(task, transformer):
     for file in os.listdir(config.LOGS_PATH):
         if all(item in file for item in [task, transformer.split("/")[-1], config.DOMAIN_TRAIN]):
 
             return {'weights': config.LOGS_PATH + '/' + file,
                     'batch_size':int(file.split(']')[4].split('[')[1]),
-                    'max_len': int(file.split(']')[3].split('[')[1])}
-            
-            
+                    'max_len': int(file.split(']')[3].split('[')[1]),
+                    'dropout': int(file.split(']')[5].split('[')[1])}
+
 
 def validation(df_val, task, transformer):
     parameters = transformer_parameters(task, transformer)
@@ -64,7 +65,7 @@ def validation(df_val, task, transformer):
     )
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = TransforomerModel(transformer, drop_out, number_of_classes=df_train[task].max()+1)
+    model = TransforomerModel(transformer, parameters['dropout'], number_of_classes=df_train[task].max()+1)
     model.load_state_dict(torch.load(parameters['weights']))
     model.to(device)
     
@@ -81,13 +82,13 @@ if __name__ == "__main__":
 
     dfx = pd.read_csv(config.DATA_PATH + '/' + config.DATASET_DEV, sep='\t', nrows=config.N_ROWS).fillna("none")
     
-    for task in tqdm(config.LABELS, desc='TRAIN', position=0):
+    for task in tqdm(config.LABELS, desc='VALIDATION', position=0):
         
         df_val = dfx.loc[dfx[task]>=0]
         
         for transformer in config.TRANSFORMERS:
             
-            tqdm.write(f'\nValidation = Task: {task} Transfomer: {transformer.split("/")[-1]} Max_len: {max_len}')
+            tqdm.write(f'\nValidation = Task: {task} Transfomer: {transformer.split("/")[-1]}')
             
             predictions, targets = validation(df_val, 
                                                 task,
@@ -97,24 +98,38 @@ if __name__ == "__main__":
             df_val[task + '_' + transformer.split("/")[-1] + '_outputs'] = predictions
             df_val[task + '_' + transformer.split("/")[-1] + '_prediction'] = [pred.index(max(pred)) for pred in predictions]
 
-        columns_higher_sum = [col if all(item in col for item in [task, '_outputs']) for col in dfx.columns]
-        columns_majority_vote = [col if all(item in col for item in [task, '_prediction']) for col in dfx.columns]
+        columns_higher_sum = [col if all(item in col for item in [task, '_outputs']) for col in df_val]
+        columns_majority_vote = [col if all(item in col for item in [task, '_prediction']) for col in df_val]
         
         df_val[task + '_higher_sum'] = df_val.loc[:,columns_higher_sum].apply(lambda x: higher(x))
         df_val[task + '_majority_vote'] = df_val.loc[:,columns_majority_vote].apply(lambda x: majority(x))
         
         
         dfx = pd.merge(dfx, df_val, left_index)
+        
+    dfx = dfx.fillna(-1)
+    dfx.to_csv(config.LOGS_PATH + '/' + config.DOMAIN_VALIDATION + '.csv')
+
+    
+    metric_col = [col if any(item in col for item in config.LABELS) for col in dfx.columns]
+    metric_col = [col if '_outputs' not in col for col in metric_col]
+    
+    metric_dic = {'model':[], 'accuracy':[], 'f1_macro':[]}
+    
+    for task in config.LABELS:
+        for col in metric_col:
+            if task in col and task != col:
+                metric_dic['model'].append(col)
+                metric_dic['f1_macro'].append(metrics.f1_score(dfx[task], dfx[col], average='macro'))
+                metric_dic['accuracy'].append(metrics.accuracy_score(dfx[task], dfx[col]))
+            
+    
+    df_metrics = DataFrame(metric_dic)
+    df_metrics.to_csv(config.LOGS_PATH + '/' + config.DOMAIN_VALIDATION + 'metrics' + '.csv')
+
+    
     
 
-
-    
-    
-    # dfx = dfx.fillna(-1)
-
-    #caculate prediction for each model
-    #majority volte - tie get a random choice between the ones choice by the models
-    #sum of the outputs
         
             
             
@@ -123,23 +138,15 @@ if __name__ == "__main__":
     
     
     
-    f1_val = metrics.f1_score(targ_val, pred_val, average='macro')
-    acc_val = metrics.accuracy_score(targ_val, pred_val)
+
     
-    
-    df_preds['majority_vote'] = df_preds
-    df_preds['higher_sun'] = 
-    df_preds_&_labels = pd.merge(dfx, df_predictions, left_index=True)
-    
-    ## I must live the task C as the last because it depend on task A model and task B model!!!
-    
-    df_results.to_csv(config.LOGS_PATH + '/' + 'train' + '.csv', index=False)
             
 
 # #TODO check if predictions and labels are in the right order with dfx dataset
 # #TODO try train.py  again - I did some changes in the save domain
 # #TODO write Validation.py
 # #TODO write Train_all_data.py
+# #TODO IMPORTANT predictions task C must the last 
 # #TODO write test.py
 
 
