@@ -18,17 +18,37 @@ from transformers import logging
 logging.set_verbosity_error()
 
 
-def Transformer_parameters(task, transformer):
+def higher(series):
+    outputs = series.tolist()
+    sum_outputs = [sum(x) for x in zip(outputs)]
+    return sum_outputs.index(max(sum_outputs))
+
+
+def majority(series):
+    outputs = series.tolist()
+    vote = {item : 0 for item in set(outputs)}
+    for uni in set(outputs):
+        for out in outputs:
+            if out == uni:
+                vote[uni] += 1
+        
+    max_val = max(vote.values())
+    keys = [key for k,v in vote.items() if v == max_val]
+    choice = random.choice(keys)
+    return choice
+
+def transformer_parameters(task, transformer):
     for file in os.listdir(config.LOGS_PATH):
         if all(item in file for item in [task, transformer.split("/")[-1], config.DOMAIN_TRAIN]):
 
             return {'weights': config.LOGS_PATH + '/' + file,
                     'batch_size':int(file.split(']')[4].split('[')[1]),
                     'max_len': int(file.split(']')[3].split('[')[1])}
-
+            
+            
 
 def validation(df_val, task, transformer):
-    parameters = Transformer_parameters(task, transformer)
+    parameters = transformer_parameters(task, transformer)
     
     val_dataset = dataset.TransformerDataset(
         text=df_val[config.DATASET_TEXT_PROCESSED].values,
@@ -74,12 +94,23 @@ if __name__ == "__main__":
                                                 transformer
             )
             
-            df_val[task + '_' + transformer.split("/")[-1]] = predictions
-            
+            df_val[task + '_' + transformer.split("/")[-1] + '_outputs'] = predictions
+            df_val[task + '_' + transformer.split("/")[-1] + '_prediction'] = [pred.index(max(pred)) for pred in predictions]
+
+        columns_higher_sum = [col if all(item in col for item in [task, '_outputs']) for col in dfx.columns]
+        columns_majority_vote = [col if all(item in col for item in [task, '_prediction']) for col in dfx.columns]
+        
+        df_val[task + '_higher_sum'] = df_val.loc[:,columns_higher_sum].apply(lambda x: higher(x))
+        df_val[task + '_majority_vote'] = df_val.loc[:,columns_majority_vote].apply(lambda x: majority(x))
+        
+        
         dfx = pd.merge(dfx, df_val, left_index)
-    # dfx = dfx.fillna(-1)
+    
+
 
     
+    
+    # dfx = dfx.fillna(-1)
 
     #caculate prediction for each model
     #majority volte - tie get a random choice between the ones choice by the models
