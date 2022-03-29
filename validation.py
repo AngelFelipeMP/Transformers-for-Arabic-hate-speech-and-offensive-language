@@ -8,6 +8,7 @@ import random
 import config
 from tqdm import tqdm
 
+from scipy.special import softmax
 from model import TransforomerModel
 import warnings
 warnings.filterwarnings('ignore')
@@ -95,7 +96,7 @@ if __name__ == "__main__":
                                                 transformer
             )
             
-            df_val[task + '_' + transformer.split("/")[-1] + '_outputs'] = predictions
+            df_val[task + '_' + transformer.split("/")[-1] + '_outputs'] = [softmax(pred).tolist() for pred in predictions]
             df_val[task + '_' + transformer.split("/")[-1] + '_prediction'] = [pred.index(max(pred)) for pred in predictions]
 
         columns_higher_sum = [col for col in df_val if all(item in col for item in [task, '_outputs'])]
@@ -133,3 +134,4 @@ if __name__ == "__main__":
 # #TODO write Train_all_data.py
 # #TODO IMPORTANT predictions task C must the last 
 # #TODO write test.py
+# update env,ylm "add" conda install tabulate
