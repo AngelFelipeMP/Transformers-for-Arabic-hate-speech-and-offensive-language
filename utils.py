@@ -31,7 +31,10 @@ def process_OSACT2022_data(data_path, header, text_col, labels_col, index_col, c
     files = [f for f in os.listdir(data_path) if 'processed' not in f]
     
     for file in files:
-        df = pd.read_csv(data_path + '/' + file, sep='\t', header=None, usecols=columns_to_read)
+        if 'test' not in file:
+            df = pd.read_csv(data_path + '/' + file, sep='\t', header=None, usecols=columns_to_read)
+        else:
+            df = pd.read_csv(data_path + '/' + file, sep='\t', header=None, usecols=[0,1])
         
         print(df)
         
@@ -40,14 +43,16 @@ def process_OSACT2022_data(data_path, header, text_col, labels_col, index_col, c
             df = df[df.columns.tolist()[:-2] + df.columns.tolist()[-1:] + df.columns.tolist()[-2:-1]]
             df.columns = header
             df.replace(labels_col, inplace=True)
-            print(df)
+            print(df.head())
         else:
             df.columns = header[:-3]
+            print('@'*20)
+            print(header[:-3])
 
         text_col_processed = text_col + '_processed'
         pass_value_config('DATASET_TEXT_PROCESSED', '\'' +  text_col_processed + '\'')
         df[text_col_processed] = df.loc[:, text_col].apply(lambda x: arabic_prep.preprocess(x))
-        print(df)
+        print(df.head())
         
         dataset_name =  file[:-4] + '_processed' + '.txt'
         variable = 'DATASET' + ['_TRAIN' if 'train' in file else '_DEV' if 'dev' in file else '_TEST'][0]
