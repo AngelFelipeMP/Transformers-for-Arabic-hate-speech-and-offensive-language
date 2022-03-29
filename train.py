@@ -20,15 +20,15 @@ logging.set_verbosity_error()
 
 def join_results():
     list_of_results = []
-    all_grid_search = config.DOMAIN_GRID_SEARCH + '.csv'
+    # all_grid_search = config.DOMAIN_GRID_SEARCH + '.csv'
     
     for file in os.listdir(config.LOGS_PATH):
-        if '.csv' in file and all_grid_search not in file:
+        if config.DOMAIN_GRID_SEARCH in file and file != config.DOMAIN_GRID_SEARCH + '.csv':
             list_of_results.append(pd.read_csv(config.LOGS_PATH + '/' + file))
             
     if len(list_of_results) > 1:
         df = pd.concat(list_of_results, ignore_index=True)
-        df.to_csv(config.LOGS_PATH + '/' + all_grid_search, index=False)
+        df.to_csv(config.LOGS_PATH + '/' + config.DOMAIN_GRID_SEARCH + '.csv', index=False)
             
 
 def best_parameters(task, transformer):

@@ -39,9 +39,9 @@ def majority(series):
     return choice
 
 
-def transformer_parameters(task, transformer):
+def transformer_parameters(task, transformer, domain):
     for file in os.listdir(config.LOGS_PATH):
-        if all(item in file for item in [task, transformer.split("/")[-1], config.DOMAIN_TRAIN]):
+        if all(item in file for item in [task, transformer.split("/")[-1], domain]):
 
             return {'weights': config.LOGS_PATH + '/' + file,
                     'batch_size':int(file.split(']')[4].split('[')[1]),
@@ -50,7 +50,7 @@ def transformer_parameters(task, transformer):
 
 
 def validation(df_val, task, transformer):
-    parameters = transformer_parameters(task, transformer)
+    parameters = transformer_parameters(task, transformer, config.DOMAIN_TRAIN)
     
     val_dataset = dataset.TransformerDataset(
         text=df_val[config.DATASET_TEXT_PROCESSED].values,
