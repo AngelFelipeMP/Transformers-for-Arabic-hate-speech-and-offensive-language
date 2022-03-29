@@ -109,7 +109,7 @@ if __name__ == "__main__":
         
     dfx = dfx.fillna(-1)
     
-    dfx.to_csv(config.LOGS_PATH + '/' + config.DOMAIN_VALIDATION + '.csv')
+    dfx.to_csv(config.LOGS_PATH + '/' + config.DOMAIN_VALIDATION + '.csv', index=False)
 
     
     metric_col = [col for col in dfx.columns if any(item in col for item in config.LABELS) ]
@@ -126,12 +126,7 @@ if __name__ == "__main__":
             
     
     df_metrics = pd.DataFrame.from_dict(metric_dic)
-    df_metrics.to_csv(config.LOGS_PATH + '/' + config.DOMAIN_VALIDATION + '_metrics' + '.csv')
+    df_metrics.to_csv(config.LOGS_PATH + '/' + config.DOMAIN_VALIDATION + '_metrics' + '.csv', index=False)
 
     print('\n')
     print(df_metrics.to_markdown())
-
-# #TODO write Train_all_data.py
-# #TODO IMPORTANT predictions task C must the last 
-# #TODO write test.py
-# update env,ylm "add" conda install tabulate
