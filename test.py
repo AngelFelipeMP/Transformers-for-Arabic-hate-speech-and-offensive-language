@@ -99,8 +99,8 @@ if __name__ == "__main__":
     for task in config.LABELS:
         for j, model in enumerate(models_dict[task]):
             
-            df_test.loc[:, ['index'] + [models_dict[task][j]]].to_csv(config.LOGS_PATH + '/' + config.DOMAIN_TEST + '_task_' + task + '_rank_' + str(j) + '_model_' + model + '_.csv', index=False)
+            df_test.loc[:, ['index'] + [models_dict[task][j]]].to_csv(config.LOGS_PATH + '/' + config.DOMAIN_TEST + '_task_' + task + '_rank_' + str(j+1) + '_model_' + model + '_.csv', index=False)
 
             df_original_labels = df_test.loc[:, ['index'] + [models_dict[task][j]]].copy()
             df_original_labels['maped_predictions'] = df_original_labels.loc[:, models_dict[task][j]].apply(lambda x: map_pred(x, task))
-            df_original_labels.loc[:, ['index','maped_predictions']].to_csv(config.LOGS_PATH + '/' + config.DOMAIN_TEST + '_task_' + task + '_rank_' + str(j) + '_model_' + model + 'maped_labels_' + '_.csv', index=False)
+            df_original_labels.loc[:, ['index','maped_predictions']].to_csv(config.LOGS_PATH + '/' + config.DOMAIN_TEST + '_task_' + task + '_rank_' + str(j+1) + '_model_' + model + 'maped_labels_' + '_.csv', index=False)
