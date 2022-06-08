@@ -13,13 +13,18 @@ It is an effort toward the goal of mitigating the spread of offensive language a
 
 
 # Cite
-If you find this article <!-- [article](proceedining link) --> or the [code](https://github.com/AngelFelipeMP/Transformers-for-Arabic-hate-speech-and-offensive-language) useful in your research, please cite us as: (link coming soon)
+If you find this article <!-- [article](proceedining link) --> or the [code](https://github.com/AngelFelipeMP/Transformers-for-Arabic-hate-speech-and-offensive-language) useful in your research, please cite us as:
 
+
+```
+@article{depaula2022osact,
+  title={UPV at the Arabic Hate Speech 2022 Shared Task: Offensive Language and Hate Speech Detection using Transformers and Ensemble Models},
+  author={Angel Felipe Magnoss{\~a}o de Paula and Paolo Rosso, Imene Bensalem, Wajdi Zaghouani},
+  booktitle={Proceedings of The 5th Workshop on Open-Source Arabic Corpora and Processing Tools (OSACT 2022) with Shared Tasks on Quran QA and Fine-Grained Hate Speech Detection co-located with the Conference of The European Language Resources Association (LREC 2022), the 13th Edition of the Language Resources and Evaluation Conference., Marseille, Fransh, France} 
+  year={2021}
+  }
+```
 <!--
-```
-
-```
-
 ```
 
 ```
