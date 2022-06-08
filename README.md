@@ -1,7 +1,7 @@
 # UPV at the Arabic Hate Speech 2022 Shared Task: Offensive Language and Hate Speech Detection using Transformers and Ensemble Models
 
 
-![ScreenShot](methodology.png)
+![ScreenShot](OSACT2022_test.png)
 
 # Description
 This repository contains the code for the paper **UPV at the Arabic Hate Speech 2022 Shared Task: Offensive Language and Hate Speech Detection using Transformers and Ensemble Models**. This paper will be published at the LREC-WS-OSACT 2022 <!-- [LREC-WS-OSACT 2022](proceeding link -->
