@@ -4,8 +4,8 @@
 ![ScreenShot](OSACT2022_test.png)
 
 # Description
-This repository contains the code for the paper **UPV at the Arabic Hate Speech 2022 Shared Task: Offensive Language and Hate Speech Detection using Transformers and Ensemble Models**. This paper will be published at the LREC-WS-OSACT 2022 <!-- [LREC-WS-OSACT 2022](proceeding link -->
-([The 5th Workshop on Open-Source Arabic Corpora and Processing Tools with Shared Tasks on Quran QA and Fine-Grained Hate Speech Detection](https://osact-lrec.github.io/) at [13th Edition of The Language Resources and Evaluation Conference](https://lrec2022.lrec-conf.org/en/)) scientific event. Descriptions of the implementation and the dataset are contained in the paper (link coming soon) <!-- [paper] (link to paper). -->.
+This repository contains the code for the paper **UPV at the Arabic Hate Speech 2022 Shared Task: Offensive Language and Hate Speech Detection using Transformers and Ensemble Models**. This paper was published at the LREC-WS-OSACT 2022 <!-- [LREC-WS-OSACT 2022](proceeding link -->
+([The 5th Workshop on Open-Source Arabic Corpora and Processing Tools with Shared Tasks on Quran QA and Fine-Grained Hate Speech Detection](https://osact-lrec.github.io/) at [13th Edition of The Language Resources and Evaluation Conference](https://lrec2022.lrec-conf.org/en/)) scientific event. Descriptions of the implementation and the dataset are contained in the [paper](http://www.lrec-conf.org/proceedings/lrec2022/workshops/OSACT/pdf/2022.osact-1.23.pdf).
 
 # Paper Abstract
 This paper describes our participation in the shared task Fine-Grained Hate Speech Detection on Arabic Twitter at the 5th Workshop on Open-Source Arabic Corpora and Processing Tools (OSACT). The shared task is divided into three detection subtasks: (i) Detect whether a tweet is offensive or not; (ii) Detect whether a tweet contains hate speech or not; and (iii) Detect the fine-grained type of hate speech (race, religion, ideology, disability, social class, and gender).
