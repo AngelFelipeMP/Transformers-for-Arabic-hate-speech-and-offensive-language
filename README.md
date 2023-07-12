@@ -18,7 +18,7 @@ If you find this [article](https://aclanthology.org/2022.osact-1.23.pdf) or the 
 
 ```
 @InProceedings{magnossodepaula-EtAl:2022:OSACT,
-  author    = {Magnossão de Paula, Angel Felipe  and  Rosso, Paolo  and  Bensalem, Imene  and  Zaghouani, Wajdi},
+  author    = {Magnoss{\~a}o de Paula, Angel Felipe  and  Rosso, Paolo  and  Bensalem, Imene  and  Zaghouani, Wajdi},
   title     = {UPV at the Arabic Hate Speech 2022 Shared Task: Offensive Language and Hate Speech Detection using Transformers and Ensemble Models},
   booktitle      = {Proceedinsg of the 5th Workshop on Open-Source Arabic Corpora and Processing Tools with Shared Tasks on Qur'an QA and Fine-Grained Hate Speech Detection},
   month          = {June},
