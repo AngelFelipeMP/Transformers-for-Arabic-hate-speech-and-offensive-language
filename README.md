@@ -13,7 +13,7 @@ It is an effort toward the goal of mitigating the spread of offensive language a
 
 
 # Cite
-If you find this article <!-- [article](proceedining link) --> or the [code](https://github.com/AngelFelipeMP/Transformers-for-Arabic-hate-speech-and-offensive-language) useful in your research, please cite us as:
+If you find this [article](https://aclanthology.org/2022.osact-1.23.pdf) or the [code](https://github.com/AngelFelipeMP/Transformers-for-Arabic-hate-speech-and-offensive-language) useful in your research, please cite us as:
 
 
 ```
@@ -39,7 +39,7 @@ If you find this article <!-- [article](proceedining link) --> or the [code](htt
 # Credits
 OSACT 2022 shared Task Organizers
 
-OSACT 2022 proceedings: (link coming soon)
+OSACT 2022 proceedings: http://www.lrec-conf.org/proceedings/lrec2022/workshops/OSACT/index.html
 
 Task website: https://sites.google.com/view/arabichate2022/home
 
